@@ -26,15 +26,15 @@ function FileList({ files, setFiles }) {
             <div key={file._id} className="bg-white rounded-lg shadow-md p-4 relative">
               <a
                 href={
-                  file.url.includes('/image/upload/') && file.originalname.endsWith('.pdf')
-                    ? file.url.replace('/image/upload/', '/raw/upload/')
+                  file.url.includes('.pdf')
+                    ? `${file.url}?fl_attachment`  // Forces download
                     : file.url
                 }
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-600 hover:underline break-all"
               >
-                {file.originalname}
+                {file.url.split('/').pop()}
               </a>
 
               <p className="text-sm text-gray-500 mt-1">
