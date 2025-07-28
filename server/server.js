@@ -7,7 +7,10 @@ import fileRoutes from './routes/fileRoutes.js';
 
 dotenv.config();
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: 'https://drop24-26rcehdcu-yogeshs-projects-a551ca33.vercel.app', // replace with actual frontend domain
+  credentials: true,
+}));
 app.use(express.json());
 
 mongoose.connect(process.env.MONGO_URI)
