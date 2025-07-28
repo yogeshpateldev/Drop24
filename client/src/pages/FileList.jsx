@@ -42,8 +42,8 @@ function FileList({ files, setFiles }) {
               <div className="flex justify-between items-center mt-2">
                 {/* ✅ Download Button */}
                 <a
-                  href={file.url.replace('/upload/', '/upload/fl_attachment/')}
-                  download
+                  href={file.url.replace('/upload/', `/upload/fl_attachment:${file.originalname}/`)}
+                  download={file.originalname}
                   className="bg-green-500 hover:bg-green-600 text-white text-xs px-2 py-1 rounded"
                 >
                   Download
