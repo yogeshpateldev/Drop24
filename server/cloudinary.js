@@ -22,8 +22,8 @@ const storage = new CloudinaryStorage({
       use_filename: true,
       unique_filename: false,
       overwrite: true,
-      public_id: customName || originalName, // 🔁 Either custom or original
-      resource_type: 'raw',
+      public_id: file.originalname.split('.')[0], // 🔁 Either custom or original
+      resource_type: isPDF ? 'raw' : 'auto',
     };
   },
 });
