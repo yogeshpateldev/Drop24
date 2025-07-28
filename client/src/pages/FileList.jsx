@@ -38,12 +38,25 @@ function FileList({ files, setFiles }) {
               <p className="text-xs text-gray-400">
                 Uploaded: {new Date(file.uploadedAt).toLocaleString()}
               </p>
-              <button
-                onClick={() => handleDelete(file._id)}
-                className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white text-xs px-2 py-1 rounded"
-              >
-                Delete
-              </button>
+
+              <div className="flex justify-between items-center mt-2">
+                {/* ✅ Download Button */}
+                <a
+                  href={file.url.replace('/upload/', '/upload/fl_attachment/')}
+                  download
+                  className="bg-green-500 hover:bg-green-600 text-white text-xs px-2 py-1 rounded"
+                >
+                  Download
+                </a>
+
+                {/* 🗑️ Delete Button */}
+                <button
+                  onClick={() => handleDelete(file._id)}
+                  className="bg-red-500 hover:bg-red-600 text-white text-xs px-2 py-1 rounded"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           ))
         ) : (
