@@ -28,8 +28,8 @@ const Upload = ({ onUpload }) => {
         },
       });
 
-      if (res.data && res.data.originalname) {
-        alert('Upload successful: ' + res.data.originalname);
+      if (res.data && res.data.originalName) {
+        alert('Upload successful: ' + res.data.originalName);
         setFile(null);
         setCustomName('');
         onUpload(); // 🔄 Refetch file list
