@@ -10,6 +10,7 @@ const app = express();
 app.use(cors({
   origin: 'https://drop24-awfdsq1ek-yogeshs-projects-a551ca33.vercel.app',
   methods: ['GET', 'POST', 'DELETE'],
+  credentials: true,
 }));
 app.use(express.json());
 
