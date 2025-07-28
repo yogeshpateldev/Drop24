@@ -23,7 +23,7 @@ const storage = new CloudinaryStorage({
       unique_filename: false,
       overwrite: true,
       public_id: customName || originalName, // 🔁 Either custom or original
-      resource_type: 'auto',
+      resource_type: 'raw',
     };
   },
 });
