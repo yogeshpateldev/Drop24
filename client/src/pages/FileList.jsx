@@ -1,0 +1,57 @@
+// FileList.jsx
+import React from 'react';
+import api from '../api';
+
+function FileList({ files, setFiles }) {
+  const handleDelete = async (id) => {
+    const confirm = window.confirm('Are you sure you want to delete this file?');
+    if (!confirm) return;
+
+    try {
+      await api.delete(`/upload/${id}`);
+      setFiles(files.filter(file => file._id !== id)); // 🗑️ update list
+      alert('File deleted');
+    } catch (err) {
+      console.error('Failed to delete file:', err);
+      alert('Failed to delete file');
+    }
+  };
+
+  return (
+    <div className="p-4">
+      <h2 className="text-xl font-semibold mb-4">📁 Public Files</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {files.length > 0 ? (
+          files.map((file) => (
+            <div key={file._id} className="bg-white rounded-lg shadow-md p-4 relative">
+              <a
+                href={file.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:underline break-all"
+              >
+                {file.url.split('/').pop()}
+              </a>
+              <p className="text-sm text-gray-500 mt-1">
+                Visibility: {file.visibility}
+              </p>
+              <p className="text-xs text-gray-400">
+                Uploaded: {new Date(file.uploadedAt).toLocaleString()}
+              </p>
+              <button
+                onClick={() => handleDelete(file._id)}
+                className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white text-xs px-2 py-1 rounded"
+              >
+                Delete
+              </button>
+            </div>
+          ))
+        ) : (
+          <p>No files available.</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default FileList;
