@@ -10,15 +10,28 @@ const upload = multer({ storage });
 
 // Upload file
 router.post('/upload', upload.single('file'), async (req, res) => {
-  const { visibility } = req.body;
-  const file = await File.create({
-    originalname: req.file.originalname,
-    url: req.file.path,
-    public_id: req.file.filename || req.file.public_id,
-    visibility,
-  });
-  res.json(file);
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const { visibility } = req.body;
+    console.log('Uploaded file:', req.file); // debug
+
+    const file = await File.create({
+      originalname: req.file.originalname,
+      url: req.file.path,
+      public_id: req.file.filename || req.file.public_id,
+      visibility,
+    });
+
+    res.json(file);
+  } catch (err) {
+    console.error('Upload error:', err);
+    res.status(500).json({ error: 'Server error during file upload' });
+  }
 });
+
 
 // Get all public files
 router.get('/files', async (req, res) => {
