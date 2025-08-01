@@ -20,7 +20,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
 
     const file = await File.create({
       originalname: req.file.originalname,
-      url: req.file.url,
+      url: req.file.path,
       public_id: req.file.public_id,
       visibility,
     });
