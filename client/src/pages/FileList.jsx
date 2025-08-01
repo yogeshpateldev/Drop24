@@ -27,7 +27,7 @@ function FileList({ files, setFiles }) {
               <a
                 href={
                   file.url.includes('.pdf')
-                    ? `${file.url}?fl_attachment`  // Forces download
+                    ? `${file.url.replace('/raw/', '/')}?fl_attachment`  // Forces download
                     : file.url
                 }
                 target="_blank"
