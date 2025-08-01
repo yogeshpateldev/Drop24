@@ -20,14 +20,14 @@ router.post('/upload', upload.single('file'), async (req, res) => {
 
     const file = await File.create({
       originalname: req.file.originalname,
-      url: req.file.path,
-      public_id: req.file.filename || req.file.public_id,
+      url: req.file.url,
+      public_id: req.file.public_id,
       visibility,
     });
 
     res.json(file);
   } catch (err) {
-    console.error('Upload error:', err);
+    console.error('Upload error:',err.stack || err);
     res.status(500).json({ error: 'Server error during file upload' });
   }
 });

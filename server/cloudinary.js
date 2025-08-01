@@ -2,6 +2,7 @@
 import { v2 as cloudinary } from 'cloudinary';
 import { CloudinaryStorage } from 'multer-storage-cloudinary';
 import dotenv from 'dotenv';
+import path from 'path';
 dotenv.config();
 
 cloudinary.config({
@@ -11,21 +12,25 @@ cloudinary.config({
 });
 
 // 📁 Custom filename support
+
 const storage = new CloudinaryStorage({
   cloudinary,
   params: async (req, file) => {
     const customName = req.body.customName?.trim();
-    const originalName = file.originalname.split('.').slice(0, -1).join('.');
-    
+    const fullName = customName || file.originalname;
+    const ext = path.extname(fullName).toLowerCase(); // e.g. '.pdf'
+    const isPDF = ext === '.pdf';
+
     return {
       folder: 'drop24',
       use_filename: true,
       unique_filename: false,
       overwrite: true,
-      public_id: file.originalname.split('.')[0], // 🔁 Either custom or original
-      resource_type: isPDF ? 'raw' : 'auto',
+      public_id: fullName, // includes extension
+      resource_type: isPDF ? 'raw' : 'auto', // <-- key part
     };
   },
 });
+
 
 export { cloudinary, storage };
