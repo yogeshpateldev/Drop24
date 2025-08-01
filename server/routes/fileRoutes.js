@@ -24,7 +24,6 @@ router.post('/upload', upload.single('file'), async (req, res) => {
       public_id: req.file.filename,
       visibility,
     });
-    console.log('Uploaded file info:', req.file);
 
 
     res.json(fileDetail);
