@@ -19,7 +19,7 @@ const storage = new CloudinaryStorage({
     const customName = req.body.customName?.trim();
     const fullName = customName || file.originalname;
     const ext = path.extname(fullName).toLowerCase(); // e.g. '.pdf'
-    const isPDF = ext === '.pdf';
+    const isRaw = ['pdf', 'doc', 'docx', 'txt', 'zip', 'rar'].includes(ext);
 
     return {
       folder: 'drop24',
@@ -27,7 +27,7 @@ const storage = new CloudinaryStorage({
       unique_filename: false,
       overwrite: true,
       public_id: fullName, // includes extension
-      resource_type: isPDF ? 'raw' : 'auto', // <-- key part
+      resource_type: isRAW ? 'raw' : 'auto', // <-- key part
     };
   },
 });
