@@ -28,8 +28,8 @@ const Upload = ({ onUpload }) => {
         },
       });
 
-      if (res.data && res.data.originalName) {
-        alert('Upload successful: ' + res.data.originalName);
+      if (res.data && res.data.originalNnme) {
+        alert('Upload successful: ' + res.data.originalname);
         setFile(null);
         setCustomName('');
         onUpload(); // 🔄 Refetch file list
@@ -37,8 +37,8 @@ const Upload = ({ onUpload }) => {
         alert('Upload succeeded, but no file info returned.');
       }
     } catch (err) {
-      console.error('Upload error:', err);
-      alert('Upload failed');
+      console.error('Upload error:', err.response?.data || err.message);
+      alert('Upload failed:'+ (err.response?.data?.error || err.message));
     }
   };
 
