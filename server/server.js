@@ -8,7 +8,7 @@ import fileRoutes from './routes/fileRoutes.js';
 dotenv.config();
 const app = express();
 app.use(cors({
-  origin: 'https://drop24-76e37xags-yogeshs-projects-a551ca33.vercel.app',
+  origin: 'https://drop24-yogeshs-projects-a551ca33.vercel.app',
   methods: ['GET', 'POST', 'DELETE'],
   credentials: true,
 }));
