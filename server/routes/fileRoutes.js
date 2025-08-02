@@ -8,7 +8,10 @@ import fs from 'fs';
 import path from 'path';
 
 const router = express.Router();
-const upload = multer({ dest: 'uploads/' }); // ✅ saves to disk temporarily
+const upload = multer({ 
+  dest: 'uploads/',
+  limits: { fileSize: 50 * 1024 * 1024 }, 
+}); // ✅ saves to disk temporarily
 
 
 // Upload file
