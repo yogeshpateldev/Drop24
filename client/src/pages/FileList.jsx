@@ -49,8 +49,8 @@ function FileList({ files, setFiles }) {
                 <a
                   href={
                     file.url.includes('/raw/')
-                      ? file.url + '?fl_attachment=' + file.originalname
-                      : file.url.replace('/image/upload/', '/image/upload/fl_attachment:' + file.originalname + '/')
+                      ? file.url.replace('/raw/upload/', `/raw/upload/fl_attachment:${file.originalname}/`)
+                      : file.url.replace('/upload/', `/raw/upload/fl_attachment:${file.originalname}/`)
                   }
                   download={file.originalname}
                   className="bg-green-500 hover:bg-green-600 text-white text-xs px-2 py-1 rounded"
