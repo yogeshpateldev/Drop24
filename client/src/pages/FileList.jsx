@@ -26,15 +26,15 @@ function FileList({ files, setFiles }) {
             <div key={file._id} className="bg-white rounded-lg shadow-md p-4 relative">
               <a
                 href={
-                  file.url.endsWith('.pdf') || file.url.endsWith('.docx') || file.url.endsWith('.zip')
-                    ? file.url.replace('/image/upload/', '/raw/upload/') + '?fl_attachment'  // Forces download
+                  file.url.includes('/raw/')
+                    ? file.url + '?fl_attachment' // already raw → add download param
                     : file.url
                 }
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-600 hover:underline break-all"
               >
-                {file.url.split('/').pop()}
+                {file.originalname}
               </a>
 
               <p className="text-sm text-gray-500 mt-1">
@@ -47,12 +47,17 @@ function FileList({ files, setFiles }) {
               <div className="flex justify-between items-center mt-2">
                 {/* ✅ Download Button */}
                 <a
-                  href={file.url.replace('/upload/', `/upload/fl_attachment:${file.originalname}/`)}
+                  href={
+                    file.url.includes('/raw/')
+                      ? file.url + '?fl_attachment=' + file.originalname
+                      : file.url.replace('/image/upload/', '/image/upload/fl_attachment:' + file.originalname + '/')
+                  }
                   download={file.originalname}
                   className="bg-green-500 hover:bg-green-600 text-white text-xs px-2 py-1 rounded"
                 >
                   Download
                 </a>
+
 
                 {/* 🗑️ Delete Button */}
                 <button

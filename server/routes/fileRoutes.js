@@ -4,9 +4,12 @@ import multer from 'multer';
 import File from '../models/File.js';
 import { storage, cloudinary } from '../cloudinary.js';
 import cron from 'node-cron';
+import fs from 'fs';
+import path from 'path';
 
 const router = express.Router();
-const upload = multer({ storage });
+const upload = multer({ dest: 'uploads/' }); // ✅ saves to disk temporarily
+
 
 // Upload file
 router.post('/upload', upload.single('file'), async (req, res) => {
@@ -15,20 +18,36 @@ router.post('/upload', upload.single('file'), async (req, res) => {
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    const { visibility } = req.body;
-    console.log('Uploaded file:', req.file); // debug
+    const { visibility, customName } = req.body;
+
+    // Get extension and determine if raw
+    const ext = path.extname(req.file.originalname).toLowerCase().slice(1); // remove dot
+    const isRaw = ['pdf', 'doc', 'docx', 'txt', 'zip', 'rar'].includes(ext);
+
+    const public_id = (customName || req.file.originalname).replace(/\s+/g, '_');
+
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      resource_type: isRaw ? 'raw' : 'auto',
+      folder: 'drop24',
+      public_id,
+      use_filename: true,
+      unique_filename: false,
+      overwrite: true,
+    });
+
+    // Clean up temp file
+    fs.unlinkSync(req.file.path);
 
     const fileDetail = await File.create({
       originalname: req.file.originalname,
-      url: req.file.path,
-      public_id: req.file.filename,
+      url: result.secure_url,
+      public_id: result.public_id,
       visibility,
     });
 
-
     res.json(fileDetail);
   } catch (err) {
-    console.error('Upload error:',err.stack || err);
+    console.error('Upload error:', err.stack || err);
     res.status(500).json({ error: 'Server error during file upload' });
   }
 });
