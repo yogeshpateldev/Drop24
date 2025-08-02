@@ -2,6 +2,12 @@
 import React from 'react';
 import api from '../api';
 
+const getDownloadUrl = (file) => {
+  const [prefix, suffix] = file.url.split('/upload/');
+  const filename = encodeURIComponent(file.originalname); // Make sure spaces etc are safe
+  return `${prefix}/upload/fl_attachment:${filename}/${suffix}`;
+};
+
 function FileList({ files, setFiles }) {
   const handleDelete = async (id) => {
     const confirm = window.confirm('Are you sure you want to delete this file?');
@@ -43,11 +49,12 @@ function FileList({ files, setFiles }) {
               <p className="text-xs text-gray-400">
                 Uploaded: {new Date(file.uploadedAt).toLocaleString()}
               </p>
-                
+
               <div className="flex justify-between items-center mt-2">
                 {/* ✅ Download Button */}
+
                 <a
-                  href={`https://res.cloudinary.com/dwiptzkwk/${file.resource_type}/upload/fl_attachment:${file.originalname}/${file.public_id}`}
+                  href={getDownloadUrl(file)}
                   download={file.originalname}
                   className="bg-green-500 hover:bg-green-600 text-white text-xs px-2 py-1 rounded"
                 >
