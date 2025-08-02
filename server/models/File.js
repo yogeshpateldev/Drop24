@@ -7,7 +7,8 @@ const fileSchema = new mongoose.Schema({
   public_id: String,
   visibility: { type: String, enum: ['public', 'private'], default: 'public' },
   uploadedAt: { type: Date, default: Date.now },
-  accessToken: { type: String, unique: true, sparse: true }
+  accessToken: { type: String, unique: true, sparse: true },
+  resource_type: { type: String, enum: ['image', 'raw'], required: true }
 });
 
 export default mongoose.model('File', fileSchema);

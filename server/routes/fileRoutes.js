@@ -43,6 +43,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
       url: result.secure_url,
       public_id: result.public_id,
       visibility,
+      resource_type: result.resource_type,
     });
 
     res.json(fileDetail);
