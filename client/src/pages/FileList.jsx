@@ -43,7 +43,7 @@ function FileList({ files, setFiles }) {
               <p className="text-xs text-gray-400">
                 Uploaded: {new Date(file.uploadedAt).toLocaleString()}
               </p>
-                {console.log(file);}
+                
               <div className="flex justify-between items-center mt-2">
                 {/* ✅ Download Button */}
                 <a
