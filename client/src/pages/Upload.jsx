@@ -28,7 +28,7 @@ const Upload = ({ onUpload }) => {
         },
       });
 
-      if (res.data && res.data.originalNnme) {
+      if (res.data && res.data.originalname) {
         alert('Upload successful: ' + res.data.originalname);
         setFile(null);
         setCustomName('');
