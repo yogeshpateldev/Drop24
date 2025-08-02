@@ -4,8 +4,9 @@ import api from '../api';
 
 const getDownloadUrl = (file) => {
   const [prefix, suffix] = file.url.split('/upload/');
-  const filename = encodeURIComponent(file.originalname); // Make sure spaces etc are safe
-  return `${prefix}/upload/fl_attachment:${filename}/${suffix}`;
+  const [prefix2, suffix2] = file.url.split('/drop24/');
+  // const filename = encodeURIComponent(file.originalname); // Make sure spaces etc are safe
+  return `${prefix}/upload/fl_attachment/drop24/${suffix2}`;
 };
 
 function FileList({ files, setFiles }) {
