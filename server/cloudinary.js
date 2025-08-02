@@ -18,7 +18,7 @@ const storage = new CloudinaryStorage({
   params: async (req, file) => {
     const customName = req.body.customName?.trim();
     const fullName = customName || file.originalname;
-    const ext = path.extname(fullName).toLowerCase(); // e.g. '.pdf'
+    const ext = path.extname(fullName).toLowerCase().slice(1); // e.g. '.pdf'
     const isRaw = ['pdf', 'doc', 'docx', 'txt', 'zip', 'rar'].includes(ext);
 
     return {
