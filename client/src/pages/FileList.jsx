@@ -26,8 +26,8 @@ function FileList({ files, setFiles }) {
             <div key={file._id} className="bg-white rounded-lg shadow-md p-4 relative">
               <a
                 href={
-                  file.url.includes('.pdf')
-                    ? file.url.replace('/upload/', '/raw/upload/') + '?fl_attachment'  // Forces download
+                  file.url.endsWith('.pdf') || file.url.endsWith('.docx') || file.url.endsWith('.zip')
+                    ? file.url.replace('/image/upload/', '/raw/upload/') + '?fl_attachment'  // Forces download
                     : file.url
                 }
                 target="_blank"
