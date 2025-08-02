@@ -24,13 +24,13 @@ router.post('/upload', upload.single('file'), async (req, res) => {
     const ext = path.extname(req.file.originalname).toLowerCase().slice(1); // remove dot
     const isRaw = ['pdf', 'doc', 'docx', 'txt', 'zip', 'rar'].includes(ext);
 
-    const public_id = (customName || req.file.originalname).replace(/\s+/g, '_');
+    const fullName = (customName || req.file.originalname).replace(/\s+/g, '_');
+    const baseName = path.basename(fullName, path.extname(fullName));
 
     const result = await cloudinary.uploader.upload(req.file.path, {
       resource_type: isRaw ? 'raw' : 'auto',
       folder: 'drop24',
-      public_id,
-      use_filename: true,
+      public_id:baseName,
       unique_filename: false,
       overwrite: true,
     });

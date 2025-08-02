@@ -27,7 +27,7 @@ const storage = new CloudinaryStorage({
       use_filename: true,
       unique_filename: false,
       overwrite: true,
-      public_id: baseName, // includes extension
+      public_id: baseName, 
       resource_type: isRaw ? 'raw' : 'auto', // <-- key part
     };
   },
