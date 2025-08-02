@@ -27,7 +27,7 @@ const storage = new CloudinaryStorage({
       unique_filename: false,
       overwrite: true,
       public_id: fullName, // includes extension
-      resource_type: isRAW ? 'raw' : 'auto', // <-- key part
+      resource_type: isRaw ? 'raw' : 'auto', // <-- key part
     };
   },
 });
