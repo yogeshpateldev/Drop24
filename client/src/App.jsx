@@ -1,12 +1,37 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import Login from './components/Login';
+import SignUp from './components/SignUp';
 import Dashboard from './pages/Dashboard';
+
+function AppContent() {
+  const { user, loading } = useAuth();
+  const [authMode, setAuthMode] = useState('login');
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return authMode === 'login' ? (
+      <Login onToggleMode={() => setAuthMode('signup')} />
+    ) : (
+      <SignUp onToggleMode={() => setAuthMode('login')} />
+    );
+  }
+
+  return <Dashboard />;
+}
 
 function App() {
   return (
-    <div className="min-h-screen bg-gray-100">
-      <h1 className="text-3xl text-center font-bold py-6">Drop24 🚀</h1>
-      <Dashboard></Dashboard>
-    </div>
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
 

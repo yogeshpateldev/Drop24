@@ -5,6 +5,7 @@ const fileSchema = new mongoose.Schema({
   originalname: String,
   url: String,
   public_id: String,
+  userId: { type: String, required: true }, // Supabase user ID
   visibility: { type: String, enum: ['public', 'private'], default: 'public' },
   uploadedAt: { type: Date, default: Date.now },
   accessToken: { type: String, unique: true, sparse: true },
