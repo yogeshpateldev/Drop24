@@ -11,7 +11,7 @@ dotenv.config();
 // Validate required environment variables
 const requiredEnvVars = [
   'JWT_SECRET',
-  'MONGODB_URI',
+  'MONGO_URI',
   'CLOUDINARY_CLOUD_NAME',
   'CLOUDINARY_API_KEY',
   'CLOUDINARY_API_SECRET'
