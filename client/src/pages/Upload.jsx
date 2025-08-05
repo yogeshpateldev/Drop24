@@ -8,22 +8,58 @@ const Upload = ({ onUpload }) => {
   const [customName, setCustomName] = useState('');
   const [visibility, setVisibility] = useState('public');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const { user } = useAuth();
 
+  const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+  const ALLOWED_TYPES = [
+    'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+    'application/pdf', 'application/msword', 
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'text/plain', 'application/zip', 'application/x-rar-compressed'
+  ];
+
   const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
+    const selectedFile = e.target.files[0];
+    setError('');
+
+    if (!selectedFile) {
+      setFile(null);
+      return;
+    }
+
+    // Check file size
+    if (selectedFile.size > MAX_FILE_SIZE) {
+      setError('File size must be less than 50MB');
+      setFile(null);
+      return;
+    }
+
+    // Check file type
+    if (!ALLOWED_TYPES.includes(selectedFile.type)) {
+      setError('File type not supported. Please upload images, documents, or archives.');
+      setFile(null);
+      return;
+    }
+
+    setFile(selectedFile);
   };
 
   const handleUpload = async (e) => {
     e.preventDefault();
     if (!user) {
-      alert('Please sign in to upload files');
+      setError('Please sign in to upload files');
       return;
     }
     
-    if (!file) return alert('Please select a file');
+    if (!file) {
+      setError('Please select a file');
+      return;
+    }
 
     setLoading(true);
+    setError('');
+    
     const formData = new FormData();
     formData.append('file', file);
     formData.append('visibility', visibility);
@@ -45,11 +81,11 @@ const Upload = ({ onUpload }) => {
         setVisibility('public');
         onUpload(); // 🔄 Refetch file list
       } else {
-        alert('Upload succeeded, but no file info returned.');
+        setError('Upload succeeded, but no file info returned.');
       }
     } catch (err) {
       console.error('Upload error:', err.response?.data || err.message);
-      alert('Upload failed: ' + (err.response?.data?.error || err.message));
+      setError('Upload failed: ' + (err.response?.data?.error || err.message));
     } finally {
       setLoading(false);
     }
@@ -65,6 +101,12 @@ const Upload = ({ onUpload }) => {
 
   return (
     <form onSubmit={handleUpload} className="flex flex-col gap-4 p-4 bg-white rounded-lg shadow">
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          {error}
+        </div>
+      )}
+      
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Select File
@@ -72,12 +114,16 @@ const Upload = ({ onUpload }) => {
         <input
           type="file"
           onChange={handleFileChange}
+          accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx,.txt,.zip,.rar"
           className="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4
                      file:rounded-full file:border-0
                      file:text-sm file:font-semibold
                      file:bg-blue-50 file:text-blue-700
                      hover:file:bg-blue-100"
         />
+        <p className="text-xs text-gray-500 mt-1">
+          Max size: 50MB. Supported: Images, PDFs, Documents, Archives
+        </p>
       </div>
       
       <div>

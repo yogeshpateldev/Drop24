@@ -9,10 +9,30 @@ import fs from 'fs';
 import path from 'path';
 
 const router = express.Router();
+
+// Configure multer with better error handling
 const upload = multer({ 
   dest: 'uploads/',
-  limits: { fileSize: 50 * 1024 * 1024 }, 
-}); // ✅ saves to disk temporarily
+  limits: { 
+    fileSize: 50 * 1024 * 1024, // 50MB
+    files: 1
+  },
+  fileFilter: (req, file, cb) => {
+    // Check file type
+    const allowedTypes = [
+      'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+      'application/pdf', 'application/msword', 
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'text/plain', 'application/zip', 'application/x-rar-compressed'
+    ];
+    
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only images, documents, and archives are allowed.'), false);
+    }
+  }
+});
 
 // Upload file (requires authentication)
 router.post('/upload', authenticateUser, upload.single('file'), async (req, res) => {
@@ -22,7 +42,12 @@ router.post('/upload', authenticateUser, upload.single('file'), async (req, res)
     }
 
     const { visibility, customName } = req.body;
-    const userId = req.user.id; // From Supabase auth
+    const userId = req.user._id; // From JWT auth
+
+    // Validate visibility
+    if (visibility && !['public', 'private'].includes(visibility)) {
+      return res.status(400).json({ error: 'Invalid visibility value' });
+    }
 
     // Get extension and determine if raw
     const ext = path.extname(req.file.originalname).toLowerCase().slice(1); // remove dot
@@ -53,7 +78,17 @@ router.post('/upload', authenticateUser, upload.single('file'), async (req, res)
 
     res.json(fileDetail);
   } catch (err) {
+    // Clean up temp file if it exists
+    if (req.file && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
+    
     console.error('Upload error:', err.stack || err);
+    
+    if (err.message.includes('Invalid file type')) {
+      return res.status(400).json({ error: err.message });
+    }
+    
     res.status(500).json({ error: 'Server error during file upload' });
   }
 });
@@ -68,7 +103,7 @@ router.get('/files', optionalAuth, async (req, res) => {
       query = {
         $or: [
           { visibility: 'public' },
-          { userId: req.user.id, visibility: 'private' }
+          { userId: req.user._id, visibility: 'private' }
         ]
       };
     }
@@ -84,7 +119,7 @@ router.get('/files', optionalAuth, async (req, res) => {
 // Get user's own files (requires authentication)
 router.get('/my-files', authenticateUser, async (req, res) => {
   try {
-    const files = await File.find({ userId: req.user.id }).sort({ uploadedAt: -1 });
+    const files = await File.find({ userId: req.user._id }).sort({ uploadedAt: -1 });
     res.json(files);
   } catch (err) {
     console.error('Error fetching user files:', err);
@@ -99,13 +134,18 @@ router.delete('/upload/:id', authenticateUser, async (req, res) => {
     if (!file) return res.status(404).json({ message: 'File not found' });
 
     // Check if user owns the file
-    if (file.userId !== req.user.id) {
+    if (file.userId.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: 'Access denied' });
     }
 
     // Delete from Cloudinary if needed
     if (file.public_id) {
-      await cloudinary.uploader.destroy(file.public_id);
+      try {
+        await cloudinary.uploader.destroy(file.public_id);
+      } catch (cloudinaryError) {
+        console.error('Cloudinary delete error:', cloudinaryError);
+        // Continue with database deletion even if Cloudinary fails
+      }
     }
 
     // Delete from MongoDB
@@ -127,7 +167,7 @@ router.patch('/upload/:id', authenticateUser, async (req, res) => {
     if (!file) return res.status(404).json({ message: 'File not found' });
 
     // Check if user owns the file
-    if (file.userId !== req.user.id) {
+    if (file.userId.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: 'Access denied' });
     }
 
@@ -146,11 +186,25 @@ router.patch('/upload/:id', authenticateUser, async (req, res) => {
 
 // Auto-delete after 24 hours
 cron.schedule('0 * * * *', async () => {
-  const expired = new Date(Date.now() - 1 * 60 * 60 * 1000);
-  const oldFiles = await File.find({ uploadedAt: { $lt: expired } });
-  for (const file of oldFiles) {
-    await cloudinary.uploader.destroy(file.public_id);
-    await file.deleteOne();
+  try {
+    const expired = new Date(Date.now() - 24 * 60 * 60 * 1000); // 24 hours
+    const oldFiles = await File.find({ uploadedAt: { $lt: expired } });
+    
+    for (const file of oldFiles) {
+      try {
+        // Delete from Cloudinary
+        if (file.public_id) {
+          await cloudinary.uploader.destroy(file.public_id);
+        }
+        // Delete from MongoDB
+        await file.deleteOne();
+        console.log(`Auto-deleted file: ${file.originalname}`);
+      } catch (error) {
+        console.error(`Error auto-deleting file ${file.originalname}:`, error);
+      }
+    }
+  } catch (error) {
+    console.error('Auto-delete cron job error:', error);
   }
 });
 

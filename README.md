@@ -1,11 +1,11 @@
-# Drop24 - File Sharing App with Supabase
+# Drop24 - File Sharing App
 
-A full-stack file-sharing web application built with React, Express.js, MongoDB, and Supabase for authentication and file management.
+A full-stack file-sharing web application built with React, Express.js, MongoDB, and JWT authentication.
 
 ## Features
 
-- 🔐 **User Authentication**: Email/password and username/password login with Supabase
-- 👤 **Username Support**: Users can sign up with usernames and login with either email or username
+- 🔐 **Simple Authentication**: Username/password registration and login
+- 👤 **Username Support**: Users can login with either username or email
 - 📁 **File Upload**: Upload images, PDFs, documents, and other files
 - 🔒 **Privacy Control**: Set files as public or private
 - 👥 **User Management**: Users can only manage their own files
@@ -16,22 +16,22 @@ A full-stack file-sharing web application built with React, Express.js, MongoDB,
 
 ### Frontend
 - React 18 with Vite
-- Supabase Client for authentication
+- JWT for authentication
 - Axios for API requests
 - Tailwind CSS for styling
 
 ### Backend
 - Express.js with ES modules
-- Supabase for authentication middleware
-- MongoDB with Mongoose for file metadata
+- JWT authentication middleware
+- MongoDB with Mongoose for data storage
 - Cloudinary for file storage
 - Multer for file upload handling
+- bcryptjs for password hashing
 
 ## Prerequisites
 
 - Node.js (v16 or higher)
 - MongoDB database
-- Supabase project
 - Cloudinary account
 
 ## Setup Instructions
@@ -43,34 +43,14 @@ git clone <repository-url>
 cd Drop24
 ```
 
-### 2. Supabase Setup
-
-1. Create a new project at [supabase.com](https://supabase.com)
-2. Go to **Settings > API** to get your project URL and keys
-3. **Important**: You need TWO different keys:
-   - **Anon Key** (public): For frontend/client operations
-   - **Service Role Key** (private): For backend/server operations
-4. Go to **Authentication > Settings** and:
-   - Enable Email authentication
-   - **Disable "Confirm email"** (optional - for immediate login without email confirmation)
-   - Enable "Enable email confirmations" if you want email verification
-
-### 3. Frontend Setup
+### 2. Frontend Setup
 
 ```bash
 cd client
 npm install
 ```
 
-Create a `.env` file in the `client` directory:
-
-```env
-# Use the "anon" key (public key) for client-side operations
-VITE_SUPABASE_URL=your_supabase_project_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-```
-
-### 4. Backend Setup
+### 3. Backend Setup
 
 ```bash
 cd server
@@ -80,28 +60,33 @@ npm install
 Create a `.env` file in the `server` directory:
 
 ```env
-# Use the "service_role" key (private key) for server-side operations
-SUPABASE_URL=your_supabase_project_url
-SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+JWT_SECRET=your_jwt_secret_key_here_make_it_long_and_random
 MONGODB_URI=your_mongodb_connection_string
 CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
 CLOUDINARY_API_KEY=your_cloudinary_api_key
 CLOUDINARY_API_SECRET=your_cloudinary_api_secret
 ```
 
-### 5. Database Setup
+### 4. Database Setup
 
-The MongoDB schema will be automatically created when you first upload a file. The File model includes:
+The MongoDB schemas will be automatically created when you first use the app:
 
+**User Model:**
+- `username`: Unique username (3-20 characters)
+- `email`: Unique email address
+- `password`: Hashed password (min 6 characters)
+- `createdAt`: Account creation timestamp
+
+**File Model:**
 - `originalname`: Original file name
 - `url`: Cloudinary URL
 - `public_id`: Cloudinary public ID
-- `userId`: Supabase user ID
+- `userId`: Reference to User model
 - `visibility`: 'public' or 'private'
 - `uploadedAt`: Upload timestamp
 - `resource_type`: 'image' or 'raw'
 
-### 6. Run the Application
+### 5. Run the Application
 
 #### Development Mode
 
@@ -122,7 +107,9 @@ The frontend will be available at `http://localhost:5173` and the backend at `ht
 ## API Endpoints
 
 ### Authentication
-- `POST /api/auth/login-username` - Login with username and password
+- `POST /api/auth/register` - Register new user
+- `POST /api/auth/login` - Login user (username or email)
+- `GET /api/auth/me` - Get current user
 
 ### Authentication Required
 - `POST /api/upload` - Upload a file
@@ -135,17 +122,19 @@ The frontend will be available at `http://localhost:5173` and the backend at `ht
 
 ## Authentication Features
 
-- **Dual Login**: Users can login with either email or username
-- **Username Storage**: Usernames are stored in Supabase user metadata
-- **No Email Confirmation**: Users can login immediately after signup (configurable)
+- **Simple Registration**: Username, email, and password
+- **Flexible Login**: Use username or email to sign in
+- **JWT Tokens**: Secure authentication with 7-day token expiration
+- **Password Hashing**: Secure password storage with bcrypt
 - **Session Management**: Automatic token refresh and session persistence
 
 ## Security Features
 
-- JWT token validation using Supabase
+- JWT token validation
+- Password hashing with bcrypt
 - User ownership verification for file operations
 - Optional authentication for public file access
-- Automatic token refresh and session management
+- Automatic token management
 
 ## File Management
 

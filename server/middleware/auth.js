@@ -1,4 +1,5 @@
-import { supabase } from '../lib/supabase.js';
+import jwt from 'jsonwebtoken';
+import User from '../models/User.js';
 
 export const authenticateUser = async (req, res, next) => {
   try {
@@ -10,10 +11,13 @@ export const authenticateUser = async (req, res, next) => {
 
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
     
-    // Verify the JWT token with Supabase
-    const { data: { user }, error } = await supabase.auth.getUser(token);
+    // Verify the JWT token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
-    if (error || !user) {
+    // Get user from database
+    const user = await User.findById(decoded.userId).select('-password');
+    
+    if (!user) {
       return res.status(401).json({ error: 'Invalid token' });
     }
 
@@ -22,6 +26,12 @@ export const authenticateUser = async (req, res, next) => {
     next();
   } catch (error) {
     console.error('Auth middleware error:', error);
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ error: 'Token expired' });
+    }
     return res.status(401).json({ error: 'Authentication failed' });
   }
 };
@@ -33,9 +43,10 @@ export const optionalAuth = async (req, res, next) => {
     
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.substring(7);
-      const { data: { user }, error } = await supabase.auth.getUser(token);
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const user = await User.findById(decoded.userId).select('-password');
       
-      if (!error && user) {
+      if (user) {
         req.user = user;
       }
     }

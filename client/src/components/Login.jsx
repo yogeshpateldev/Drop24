@@ -2,9 +2,8 @@ import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
 const Login = ({ onToggleMode }) => {
-  const [identifier, setIdentifier] = useState(''); // email or username
+  const [identifier, setIdentifier] = useState(''); // username or email
   const [password, setPassword] = useState('');
-  const [loginMethod, setLoginMethod] = useState('email'); // 'email' or 'username'
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const { signIn } = useAuth();
@@ -15,26 +14,15 @@ const Login = ({ onToggleMode }) => {
     setError('');
 
     try {
-      const { error } = await signIn(identifier, password, loginMethod);
+      const { error } = await signIn(identifier, password);
       if (error) {
-        // Check if it's an email confirmation error
-        if (error.message.includes('email confirmation') || error.message.includes('Email not confirmed')) {
-          setError('Please check your email and click the confirmation link before signing in. If you haven\'t received the email, please check your spam folder.');
-        } else {
-          setError(error.message);
-        }
+        setError(error.message);
       }
     } catch (err) {
       setError('An unexpected error occurred');
     } finally {
       setLoading(false);
     }
-  };
-
-  const toggleLoginMethod = () => {
-    setLoginMethod(loginMethod === 'email' ? 'username' : 'email');
-    setIdentifier('');
-    setError('');
   };
 
   return (
@@ -52,43 +40,15 @@ const Login = ({ onToggleMode }) => {
             </div>
           )}
           
-          {/* Login Method Toggle */}
-          <div className="flex justify-center">
-            <div className="bg-gray-100 rounded-lg p-1">
-              <button
-                type="button"
-                onClick={toggleLoginMethod}
-                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                  loginMethod === 'email'
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                Email
-              </button>
-              <button
-                type="button"
-                onClick={toggleLoginMethod}
-                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                  loginMethod === 'username'
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                Username
-              </button>
-            </div>
-          </div>
-
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
               <input
-                type={loginMethod === 'email' ? 'email' : 'text'}
+                type="text"
                 required
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder={loginMethod === 'email' ? 'Email address' : 'Username'}
+                placeholder="Username or Email"
               />
             </div>
             <div>

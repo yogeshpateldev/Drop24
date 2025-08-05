@@ -12,24 +12,31 @@ const getDownloadUrl = (file) => {
 function FileList({ files, setFiles, isOwnFiles = false }) {
   const { user } = useAuth();
   const [updating, setUpdating] = useState(null);
+  const [deleting, setDeleting] = useState(null);
+  const [error, setError] = useState('');
 
   const handleDelete = async (id) => {
     const confirm = window.confirm('Are you sure you want to delete this file?');
     if (!confirm) return;
 
     try {
+      setDeleting(id);
+      setError('');
       await api.delete(`/upload/${id}`);
       setFiles(files.filter(file => file._id !== id));
-      alert('File deleted');
+      alert('File deleted successfully');
     } catch (err) {
       console.error('Failed to delete file:', err);
-      alert('Failed to delete file: ' + (err.response?.data?.message || err.message));
+      setError('Failed to delete file: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setDeleting(null);
     }
   };
 
   const handleVisibilityChange = async (fileId, newVisibility) => {
     try {
       setUpdating(fileId);
+      setError('');
       const response = await api.patch(`/upload/${fileId}`, {
         visibility: newVisibility
       });
@@ -42,7 +49,7 @@ function FileList({ files, setFiles, isOwnFiles = false }) {
       alert('Visibility updated successfully');
     } catch (err) {
       console.error('Failed to update visibility:', err);
-      alert('Failed to update visibility: ' + (err.response?.data?.message || err.message));
+      setError('Failed to update visibility: ' + (err.response?.data?.message || err.message));
     } finally {
       setUpdating(null);
     }
@@ -57,6 +64,12 @@ function FileList({ files, setFiles, isOwnFiles = false }) {
       <h2 className="text-xl font-semibold mb-4">
         {isOwnFiles ? '📁 My Files' : '📁 Public Files'}
       </h2>
+      
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          {error}
+        </div>
+      )}
       
       {files.length === 0 ? (
         <div className="text-center py-8">
@@ -114,7 +127,7 @@ function FileList({ files, setFiles, isOwnFiles = false }) {
                   <select
                     value={file.visibility}
                     onChange={(e) => handleVisibilityChange(file._id, e.target.value)}
-                    disabled={updating === file._id}
+                    disabled={updating === file._id || deleting === file._id}
                     className="text-xs px-2 py-1 border rounded bg-white disabled:opacity-50"
                   >
                     <option value="public">Public</option>
@@ -126,17 +139,18 @@ function FileList({ files, setFiles, isOwnFiles = false }) {
                 {canManageFile(file) && (
                   <button
                     onClick={() => handleDelete(file._id)}
-                    className="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1 rounded transition"
+                    disabled={updating === file._id || deleting === file._id}
+                    className="bg-red-500 hover:bg-red-600 disabled:bg-red-300 text-white text-xs px-3 py-1 rounded transition"
                   >
-                    Delete
+                    {deleting === file._id ? 'Deleting...' : 'Delete'}
                   </button>
                 )}
               </div>
 
-              {/* Loading indicator for visibility update */}
-              {updating === file._id && (
+              {/* Loading indicators */}
+              {(updating === file._id || deleting === file._id) && (
                 <div className="mt-2 text-xs text-gray-500">
-                  Updating...
+                  {updating === file._id ? 'Updating...' : 'Deleting...'}
                 </div>
               )}
             </div>

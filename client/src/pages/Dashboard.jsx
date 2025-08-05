@@ -12,12 +12,9 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(false);
   const { user, signOut } = useAuth();
 
-  // Get display name (username or email)
+  // Get display name (username)
   const getDisplayName = () => {
-    if (user?.user_metadata?.username) {
-      return user.user_metadata.username;
-    }
-    return user?.email || 'User';
+    return user?.username || 'User';
   };
 
   // Fetch public files (available to all users)

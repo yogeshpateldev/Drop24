@@ -1,103 +1,156 @@
 // server/routes/authRoutes.js
 import express from 'express';
-import { supabase } from '../lib/supabase.js';
+import jwt from 'jsonwebtoken';
+import User from '../models/User.js';
+import { authenticateUser } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Username-based login endpoint
-router.post('/login-username', async (req, res) => {
+// Register new user
+router.post('/register', async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { username, email, password } = req.body;
 
-    if (!username || !password) {
-      return res.status(400).json({ error: 'Username and password are required' });
+    if (!username || !email || !password) {
+      return res.status(400).json({ error: 'Username, email, and password are required' });
     }
 
-    // Get all users and find the one with matching username
-    const { data: users, error: listError } = await supabase.auth.admin.listUsers();
-    
-    if (listError) {
-      console.error('Error listing users:', listError);
-      return res.status(500).json({ error: 'Server error' });
+    // Validate username
+    if (username.length < 3 || username.length > 20) {
+      return res.status(400).json({ error: 'Username must be between 3 and 20 characters' });
     }
 
-    // Find user by username in metadata
-    const userWithUsername = users.users.find(user => 
-      user.user_metadata?.username === username
-    );
-
-    if (!userWithUsername) {
-      return res.status(401).json({ error: 'Username not found' });
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ error: 'Please enter a valid email address' });
     }
 
-    // Sign in with the found email
-    const { data, error } = await supabase.auth.admin.signInWithUserPassword({
-      email: userWithUsername.email,
-      password: password
+    // Validate password
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters long' });
+    }
+
+    // Check if user already exists
+    const existingUser = await User.findOne({
+      $or: [{ email: email.toLowerCase() }, { username: username.toLowerCase() }]
     });
 
-    if (error) {
-      console.error('Login error:', error);
-      return res.status(401).json({ error: 'Invalid password' });
+    if (existingUser) {
+      if (existingUser.email.toLowerCase() === email.toLowerCase()) {
+        return res.status(400).json({ error: 'Email already registered' });
+      }
+      if (existingUser.username.toLowerCase() === username.toLowerCase()) {
+        return res.status(400).json({ error: 'Username already taken' });
+      }
     }
 
-    // Return the session tokens
-    res.json({
-      access_token: data.session.access_token,
-      refresh_token: data.session.refresh_token,
-      user: data.user
+    // Create new user
+    const user = new User({
+      username: username.toLowerCase(),
+      email: email.toLowerCase(),
+      password
+    });
+
+    await user.save();
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { userId: user._id, username: user.username },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    // Return user data (without password) and token
+    const userResponse = {
+      id: user._id,
+      username: user.username,
+      email: user.email,
+      createdAt: user.createdAt
+    };
+
+    res.status(201).json({
+      message: 'User registered successfully',
+      user: userResponse,
+      token
     });
 
   } catch (error) {
-    console.error('Auth route error:', error);
+    console.error('Registration error:', error);
+    
+    // Handle MongoDB duplicate key errors
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyPattern)[0];
+      return res.status(400).json({ 
+        error: `${field.charAt(0).toUpperCase() + field.slice(1)} already exists` 
+      });
+    }
+    
     res.status(500).json({ error: 'Server error' });
   }
 });
 
-// Auto-confirm email endpoint
-router.post('/confirm-email', async (req, res) => {
+// Login user
+router.post('/login', async (req, res) => {
   try {
-    const { email } = req.body;
+    const { identifier, password } = req.body; // identifier can be username or email
 
-    if (!email) {
-      return res.status(400).json({ error: 'Email is required' });
+    if (!identifier || !password) {
+      return res.status(400).json({ error: 'Username/email and password are required' });
     }
 
-    console.log('Attempting to confirm email for:', email);
-
-    // Get user by email
-    const { data: users, error: listError } = await supabase.auth.admin.listUsers();
-    
-    if (listError) {
-      console.error('Error listing users:', listError);
-      return res.status(500).json({ error: 'Server error' });
-    }
-
-    const user = users.users.find(u => u.email === email);
-
-    if (!user) {
-      console.log('User not found for email:', email);
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    console.log('Found user:', user.id, 'Email confirmed:', user.email_confirmed_at);
-
-    // Update user to confirm email - use the correct parameter
-    const { data, error } = await supabase.auth.admin.updateUserById(user.id, {
-      email_confirmed_at: new Date().toISOString()
+    // Find user by username or email (case insensitive)
+    const user = await User.findOne({
+      $or: [
+        { username: identifier.toLowerCase() },
+        { email: identifier.toLowerCase() }
+      ]
     });
 
-    if (error) {
-      console.error('Error confirming email:', error);
-      return res.status(500).json({ error: 'Failed to confirm email: ' + error.message });
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    console.log('Email confirmed successfully for user:', user.id);
-    res.json({ message: 'Email confirmed successfully', user: data.user });
+    // Check password
+    const isPasswordValid = await user.comparePassword(password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { userId: user._id, username: user.username },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    // Return user data (without password) and token
+    const userResponse = {
+      id: user._id,
+      username: user.username,
+      email: user.email,
+      createdAt: user.createdAt
+    };
+
+    res.json({
+      message: 'Login successful',
+      user: userResponse,
+      token
+    });
 
   } catch (error) {
-    console.error('Confirm email error:', error);
-    res.status(500).json({ error: 'Server error: ' + error.message });
+    console.error('Login error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Get current user
+router.get('/me', authenticateUser, async (req, res) => {
+  try {
+    res.json({ user: req.user });
+  } catch (error) {
+    console.error('Get user error:', error);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
