@@ -63,6 +63,8 @@ router.post('/confirm-email', async (req, res) => {
       return res.status(400).json({ error: 'Email is required' });
     }
 
+    console.log('Attempting to confirm email for:', email);
+
     // Get user by email
     const { data: users, error: listError } = await supabase.auth.admin.listUsers();
     
@@ -74,24 +76,28 @@ router.post('/confirm-email', async (req, res) => {
     const user = users.users.find(u => u.email === email);
 
     if (!user) {
+      console.log('User not found for email:', email);
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Update user to confirm email
+    console.log('Found user:', user.id, 'Email confirmed:', user.email_confirmed_at);
+
+    // Update user to confirm email - use the correct parameter
     const { data, error } = await supabase.auth.admin.updateUserById(user.id, {
-      email_confirm: true
+      email_confirmed_at: new Date().toISOString()
     });
 
     if (error) {
       console.error('Error confirming email:', error);
-      return res.status(500).json({ error: 'Failed to confirm email' });
+      return res.status(500).json({ error: 'Failed to confirm email: ' + error.message });
     }
 
+    console.log('Email confirmed successfully for user:', user.id);
     res.json({ message: 'Email confirmed successfully', user: data.user });
 
   } catch (error) {
     console.error('Confirm email error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error: ' + error.message });
   }
 });
 

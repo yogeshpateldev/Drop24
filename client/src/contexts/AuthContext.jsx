@@ -34,6 +34,8 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const signUp = async (email, password, username) => {
+    console.log('Starting signup process for:', email);
+    
     // First, create the user account
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -47,24 +49,35 @@ export const AuthProvider = ({ children }) => {
     });
 
     if (error) {
+      console.error('Signup error:', error);
       return { data, error };
     }
 
+    console.log('User created successfully:', data.user?.id);
+
     // Auto-confirm email via backend
     try {
-      await api.post('/auth/confirm-email', { email });
+      console.log('Attempting to auto-confirm email...');
+      const confirmResponse = await api.post('/auth/confirm-email', { email });
+      console.log('Email confirmation response:', confirmResponse.data);
     } catch (e) {
-      // If this fails, fallback to normal flow (user may still need to confirm email)
+      console.error('Email confirmation failed:', e.response?.data || e.message);
+      // Continue with signin attempt even if confirmation fails
     }
 
     // Try to sign in immediately
+    console.log('Attempting to sign in...');
     const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
+    
     if (signInError) {
+      console.error('Signin error:', signInError);
       return { data: signInData, error: signInError };
     }
+    
+    console.log('Signin successful:', signInData.user?.id);
     return { data: signInData, error: null };
   };
 
