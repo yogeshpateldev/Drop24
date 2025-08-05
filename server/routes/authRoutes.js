@@ -1,0 +1,57 @@
+// server/routes/authRoutes.js
+import express from 'express';
+import { supabase } from '../lib/supabase.js';
+
+const router = express.Router();
+
+// Username-based login endpoint
+router.post('/login-username', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Username and password are required' });
+    }
+
+    // Get all users and find the one with matching username
+    const { data: users, error: listError } = await supabase.auth.admin.listUsers();
+    
+    if (listError) {
+      console.error('Error listing users:', listError);
+      return res.status(500).json({ error: 'Server error' });
+    }
+
+    // Find user by username in metadata
+    const userWithUsername = users.users.find(user => 
+      user.user_metadata?.username === username
+    );
+
+    if (!userWithUsername) {
+      return res.status(401).json({ error: 'Username not found' });
+    }
+
+    // Sign in with the found email
+    const { data, error } = await supabase.auth.admin.signInWithUserPassword({
+      email: userWithUsername.email,
+      password: password
+    });
+
+    if (error) {
+      console.error('Login error:', error);
+      return res.status(401).json({ error: 'Invalid password' });
+    }
+
+    // Return the session tokens
+    res.json({
+      access_token: data.session.access_token,
+      refresh_token: data.session.refresh_token,
+      user: data.user
+    });
+
+  } catch (error) {
+    console.error('Auth route error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+export default router; 

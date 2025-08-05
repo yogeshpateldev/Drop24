@@ -12,6 +12,14 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(false);
   const { user, signOut } = useAuth();
 
+  // Get display name (username or email)
+  const getDisplayName = () => {
+    if (user?.user_metadata?.username) {
+      return user.user_metadata.username;
+    }
+    return user?.email || 'User';
+  };
+
   // Fetch public files (available to all users)
   const fetchPublicFiles = async () => {
     try {
@@ -74,7 +82,7 @@ const Dashboard = () => {
               {user ? (
                 <>
                   <span className="text-sm text-gray-600">
-                    Welcome, {user.email}
+                    Welcome, {getDisplayName()}
                   </span>
                   <button
                     onClick={handleSignOut}

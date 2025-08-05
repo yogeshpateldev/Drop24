@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import api from '../api';
 
 const AuthContext = createContext({});
 
@@ -32,20 +33,73 @@ export const AuthProvider = ({ children }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email, password) => {
+  const signUp = async (email, password, username) => {
+    // First, create the user account
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          username: username,
+        },
+        emailRedirectTo: window.location.origin,
+      }
     });
+
+    if (error) {
+      return { data, error };
+    }
+
+    // If signup successful, sign in immediately (no email confirmation needed)
+    if (data.user) {
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (signInError) {
+        return { data: signInData, error: signInError };
+      }
+      
+      return { data: signInData, error: null };
+    }
+
     return { data, error };
   };
 
-  const signIn = async (email, password) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    return { data, error };
+  const signIn = async (identifier, password, method = 'email') => {
+    if (method === 'username') {
+      // Use backend endpoint for username login
+      try {
+        const response = await api.post('/auth/login-username', {
+          username: identifier,
+          password: password
+        });
+        
+        if (response.data.access_token) {
+          // Set the session manually
+          const { data, error } = await supabase.auth.setSession({
+            access_token: response.data.access_token,
+            refresh_token: response.data.refresh_token
+          });
+          
+          return { data, error };
+        }
+      } catch (error) {
+        return { 
+          data: null, 
+          error: { message: error.response?.data?.error || 'Login failed' } 
+        };
+      }
+    } else {
+      // Regular email login
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: identifier,
+        password,
+      });
+      
+      return { data, error };
+    }
   };
 
   const signOut = async () => {

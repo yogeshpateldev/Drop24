@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 const SignUp = ({ onToggleMode }) => {
   const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -15,6 +16,12 @@ const SignUp = ({ onToggleMode }) => {
     setLoading(true);
     setError('');
     setMessage('');
+
+    if (!username.trim()) {
+      setError('Username is required');
+      setLoading(false);
+      return;
+    }
 
     if (password !== confirmPassword) {
       setError('Passwords do not match');
@@ -29,11 +36,11 @@ const SignUp = ({ onToggleMode }) => {
     }
 
     try {
-      const { error } = await signUp(email, password);
+      const { error } = await signUp(email, password, username);
       if (error) {
         setError(error.message);
       } else {
-        setMessage('Check your email for a confirmation link!');
+        setMessage('Account created successfully! You can now sign in.');
       }
     } catch (err) {
       setError('An unexpected error occurred');
@@ -64,11 +71,21 @@ const SignUp = ({ onToggleMode }) => {
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
               <input
+                type="text"
+                required
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder="Username"
+              />
+            </div>
+            <div>
+              <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                 placeholder="Email address"
               />
             </div>

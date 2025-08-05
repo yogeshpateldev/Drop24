@@ -4,7 +4,8 @@ A full-stack file-sharing web application built with React, Express.js, MongoDB,
 
 ## Features
 
-- 🔐 **User Authentication**: Email/password signup and login with Supabase
+- 🔐 **User Authentication**: Email/password and username/password login with Supabase
+- 👤 **Username Support**: Users can sign up with usernames and login with either email or username
 - 📁 **File Upload**: Upload images, PDFs, documents, and other files
 - 🔒 **Privacy Control**: Set files as public or private
 - 👥 **User Management**: Users can only manage their own files
@@ -49,7 +50,10 @@ cd Drop24
 3. **Important**: You need TWO different keys:
    - **Anon Key** (public): For frontend/client operations
    - **Service Role Key** (private): For backend/server operations
-4. Enable Email authentication in **Authentication > Settings**
+4. Go to **Authentication > Settings** and:
+   - Enable Email authentication
+   - **Disable "Confirm email"** (optional - for immediate login without email confirmation)
+   - Enable "Enable email confirmations" if you want email verification
 
 ### 3. Frontend Setup
 
@@ -117,6 +121,9 @@ The frontend will be available at `http://localhost:5173` and the backend at `ht
 
 ## API Endpoints
 
+### Authentication
+- `POST /api/auth/login-username` - Login with username and password
+
 ### Authentication Required
 - `POST /api/upload` - Upload a file
 - `GET /api/my-files` - Get user's own files
@@ -125,6 +132,13 @@ The frontend will be available at `http://localhost:5173` and the backend at `ht
 
 ### Public
 - `GET /api/files` - Get public files (and private files if authenticated)
+
+## Authentication Features
+
+- **Dual Login**: Users can login with either email or username
+- **Username Storage**: Usernames are stored in Supabase user metadata
+- **No Email Confirmation**: Users can login immediately after signup (configurable)
+- **Session Management**: Automatic token refresh and session persistence
 
 ## Security Features
 
