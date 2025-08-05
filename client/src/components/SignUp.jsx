@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import api from '../api';
 
 const SignUp = ({ onToggleMode }) => {
   const [email, setEmail] = useState('');
@@ -38,9 +39,24 @@ const SignUp = ({ onToggleMode }) => {
     try {
       const { error } = await signUp(email, password, username);
       if (error) {
-        setError(error.message);
+        // Check if it's an email confirmation error
+        if (error.message.includes('email confirmation') || error.message.includes('Email not confirmed')) {
+          setMessage('Account created successfully! Please check your email and click the confirmation link to sign in.');
+          // Clear form on success
+          setEmail('');
+          setUsername('');
+          setPassword('');
+          setConfirmPassword('');
+        } else {
+          setError(error.message);
+        }
       } else {
         setMessage('Account created successfully! You can now sign in.');
+        // Clear form on success
+        setEmail('');
+        setUsername('');
+        setPassword('');
+        setConfirmPassword('');
       }
     } catch (err) {
       setError('An unexpected error occurred');

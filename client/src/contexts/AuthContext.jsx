@@ -50,21 +50,22 @@ export const AuthProvider = ({ children }) => {
       return { data, error };
     }
 
-    // If signup successful, sign in immediately (no email confirmation needed)
-    if (data.user) {
-      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      
-      if (signInError) {
-        return { data: signInData, error: signInError };
-      }
-      
-      return { data: signInData, error: null };
+    // Auto-confirm email via backend
+    try {
+      await api.post('/auth/confirm-email', { email });
+    } catch (e) {
+      // If this fails, fallback to normal flow (user may still need to confirm email)
     }
 
-    return { data, error };
+    // Try to sign in immediately
+    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (signInError) {
+      return { data: signInData, error: signInError };
+    }
+    return { data: signInData, error: null };
   };
 
   const signIn = async (identifier, password, method = 'email') => {
@@ -97,6 +98,16 @@ export const AuthProvider = ({ children }) => {
         email: identifier,
         password,
       });
+      
+      // Handle email confirmation error
+      if (error && error.message.includes('Email not confirmed')) {
+        return { 
+          data: null, 
+          error: { 
+            message: 'Please check your email and click the confirmation link before signing in.' 
+          } 
+        };
+      }
       
       return { data, error };
     }

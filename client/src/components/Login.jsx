@@ -17,7 +17,12 @@ const Login = ({ onToggleMode }) => {
     try {
       const { error } = await signIn(identifier, password, loginMethod);
       if (error) {
-        setError(error.message);
+        // Check if it's an email confirmation error
+        if (error.message.includes('email confirmation') || error.message.includes('Email not confirmed')) {
+          setError('Please check your email and click the confirmation link before signing in. If you haven\'t received the email, please check your spam folder.');
+        } else {
+          setError(error.message);
+        }
       }
     } catch (err) {
       setError('An unexpected error occurred');

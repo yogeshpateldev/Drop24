@@ -54,4 +54,45 @@ router.post('/login-username', async (req, res) => {
   }
 });
 
+// Auto-confirm email endpoint
+router.post('/confirm-email', async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+
+    // Get user by email
+    const { data: users, error: listError } = await supabase.auth.admin.listUsers();
+    
+    if (listError) {
+      console.error('Error listing users:', listError);
+      return res.status(500).json({ error: 'Server error' });
+    }
+
+    const user = users.users.find(u => u.email === email);
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Update user to confirm email
+    const { data, error } = await supabase.auth.admin.updateUserById(user.id, {
+      email_confirm: true
+    });
+
+    if (error) {
+      console.error('Error confirming email:', error);
+      return res.status(500).json({ error: 'Failed to confirm email' });
+    }
+
+    res.json({ message: 'Email confirmed successfully', user: data.user });
+
+  } catch (error) {
+    console.error('Confirm email error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 export default router; 
