@@ -40,12 +40,12 @@ function FileList({ files, setFiles, isOwnFiles = false }) {
       const response = await api.patch(`/upload/${fileId}`, {
         visibility: newVisibility
       });
-      
+
       // Update the file in the list
-      setFiles(files.map(file => 
+      setFiles(files.map(file =>
         file._id === fileId ? { ...file, visibility: newVisibility } : file
       ));
-      
+
       alert('Visibility updated successfully');
     } catch (err) {
       console.error('Failed to update visibility:', err);
@@ -64,13 +64,13 @@ function FileList({ files, setFiles, isOwnFiles = false }) {
       <h2 className="text-xl font-semibold mb-4">
         {isOwnFiles ? '📁 My Files' : '📁 Public Files'}
       </h2>
-      
+
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
           {error}
         </div>
       )}
-      
+
       {files.length === 0 ? (
         <div className="text-center py-8">
           <p className="text-gray-500">
@@ -83,28 +83,32 @@ function FileList({ files, setFiles, isOwnFiles = false }) {
             <div key={file._id} className="bg-white rounded-lg shadow-md p-4 relative border">
               {/* Visibility Badge */}
               <div className="absolute top-2 right-2">
-                <span className={`px-2 py-1 text-xs rounded-full ${
-                  file.visibility === 'public' 
-                    ? 'bg-green-100 text-green-800' 
+                <span className={`px-2 py-1 text-xs rounded-full ${file.visibility === 'public'
+                    ? 'bg-green-100 text-green-800'
                     : 'bg-yellow-100 text-yellow-800'
-                }`}>
+                  }`}>
                   {file.visibility}
                 </span>
               </div>
 
               {/* File Name */}
-              <a
-                href={
-                  file.url.includes('/raw/')
-                    ? file.url + '?fl_attachment'
-                    : file.url
-                }
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:underline break-all font-medium"
-              >
-                {file.originalname}
-              </a>
+              {file.url && (() => {
+                const [prefix1, suffix1] = file.url.split('/drop24/');
+                const preview = file.url.includes('/raw/')
+                  ? `${prefix1}/drop24/${file.originalname}`
+                  : file.url;
+
+                return (
+                  <a
+                    href={preview}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline break-all font-medium"
+                  >
+                    {file.originalname}
+                  </a>
+                );
+              })()}
 
               {/* File Info */}
               <p className="text-xs text-gray-400 mt-2">
