@@ -59,7 +59,7 @@ app.use(cors({
 
 app.use(express.json({ limit: '50mb' }));
 
-mongoose.connect(process.env.MONGODB_URI)
+mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.log(err));
 
