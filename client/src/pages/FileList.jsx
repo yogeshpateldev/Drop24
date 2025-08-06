@@ -6,7 +6,7 @@ import api from '../api';
 const getDownloadUrl = (file) => {
   const [prefix, suffix] = file.url.split('/upload/');
   const [prefix2, suffix2] = file.url.split('/drop24/');
-  return `${prefix}/upload/fl_attachment/drop24/${suffix2}`;
+  return `${prefix}/upload/fl_attachment:${suffix2}/drop24/${suffix2}`;
 };
 
 function FileList({ files, setFiles, isOwnFiles = false }) {
