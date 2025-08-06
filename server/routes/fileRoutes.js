@@ -7,6 +7,7 @@ import { authenticateUser, optionalAuth } from '../middleware/auth.js';
 import cron from 'node-cron';
 import fs from 'fs';
 import path from 'path';
+import fetch from 'node-fetch';
 
 const router = express.Router();
 
@@ -183,6 +184,43 @@ router.patch('/upload/:id', authenticateUser, async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+
+
+// Download file with correct filename (public or private with auth)
+router.get('/download/:id', optionalAuth, async (req, res) => {
+  try {
+    const file = await File.findById(req.params.id);
+    if (!file) return res.status(404).json({ message: 'File not found' });
+
+    // Access control
+    if (file.visibility === 'private') {
+      if (!req.user || file.userId.toString() !== req.user._id.toString()) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+    }
+
+    const cloudinaryUrl = file.url;
+
+    // Fetch file from Cloudinary
+    const response = await fetch(cloudinaryUrl);
+    if (!response.ok) {
+      return res.status(404).json({ message: 'File not found on Cloudinary' });
+    }
+
+    const cleanFilename = file.originalname.replace(/\s+/g, '_');
+
+    // Set download headers
+    res.setHeader('Content-Disposition', `attachment; filename="${cleanFilename}"`);
+    res.setHeader('Content-Type', response.headers.get('content-type') || 'application/octet-stream');
+
+    // Pipe file stream to client
+    response.body.pipe(res);
+  } catch (err) {
+    console.error('Download error:', err);
+    res.status(500).json({ message: 'Server error during download' });
+  }
+});
+
 
 // Auto-delete after 24 hours
 cron.schedule('0 * * * *', async () => {

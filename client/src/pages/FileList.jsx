@@ -113,12 +113,14 @@ function FileList({ files, setFiles, isOwnFiles = false }) {
               <div className="flex flex-wrap gap-2 mt-3">
                 {/* Download Button */}
                 <a
-                  href={getDownloadUrl(file)}
-                  download={file.originalname}
+                  href={`/api/download/${file._id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-1 rounded transition"
                 >
                   Download
                 </a>
+
 
                 {/* Visibility Toggle (only for own files) */}
                 {canManageFile(file) && (
