@@ -54,7 +54,7 @@ router.post('/upload', authenticateUser, upload.single('file'), async (req, res)
     const isRaw = ['pdf', 'doc', 'docx', 'txt', 'zip', 'rar'].includes(ext);
 
     const fullName = (customName || req.file.originalname).replace(/\s+/g, '_');
-    const baseName = path.basename(fullName, path.extname(fullName));
+    const baseName = path.basename(fullName);
 
     const result = await cloudinary.uploader.upload(req.file.path, {
       resource_type: isRaw ? 'raw' : 'auto',
