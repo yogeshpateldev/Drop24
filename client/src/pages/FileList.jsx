@@ -84,31 +84,25 @@ function FileList({ files, setFiles, isOwnFiles = false }) {
               {/* Visibility Badge */}
               <div className="absolute top-2 right-2">
                 <span className={`px-2 py-1 text-xs rounded-full ${file.visibility === 'public'
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-yellow-100 text-yellow-800'
+                  ? 'bg-green-100 text-green-800'
+                  : 'bg-yellow-100 text-yellow-800'
                   }`}>
                   {file.visibility}
                 </span>
               </div>
 
               {/* File Name */}
-              {file.url && (() => {
-                const [prefix1, suffix1] = file.url.split('/drop24/');
-                const preview = file.url.includes('/raw/')
-                  ? `${prefix1}/drop24/${file.originalname}`
-                  : file.url;
+              {file.url && (
+                <a
+                  href={file.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline break-all font-medium"
+                >
+                  {file.originalname}
+                </a>
+              )}
 
-                return (
-                  <a
-                    href={preview}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline break-all font-medium"
-                  >
-                    {file.originalname}
-                  </a>
-                );
-              })()}
 
               {/* File Info */}
               <p className="text-xs text-gray-400 mt-2">
